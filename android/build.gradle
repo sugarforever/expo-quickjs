@@ -1,0 +1,15 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+group = 'expo.modules.quickjs'
+version = '0.1.0'
+android {
+  namespace 'expo.modules.quickjs'
+  defaultConfig {
+    minSdk 24
+    consumerProguardFiles "consumer-rules.pro"
+    externalNativeBuild { cmake { cppFlags '-std=c++17 -fexceptions -frtti' } }
+  }
+  externalNativeBuild { cmake { path '../CMakeLists.txt' } }
+}

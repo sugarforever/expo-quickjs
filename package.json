@@ -1,0 +1,56 @@
+{
+  "name": "expo-quickjs",
+  "version": "0.1.0",
+  "description": "Bounded native QuickJS workers for Expo, alongside Hermes",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "react-native": "dist/index.js",
+  "source": "src/index.ts",
+  "files": [
+    "dist",
+    "src",
+    "cpp",
+    "ios",
+    "android",
+    "vendor/quickjs-2025-09-13",
+    "vendor/PROVENANCE.md",
+    "CMakeLists.txt",
+    "expo-module.config.json",
+    "ExpoQuickJS.podspec",
+    "LICENSE",
+    "README.md",
+    "docs/native-channel.md",
+    "native-tests"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --import tsx --test tests/*.test.ts",
+    "prepack": "npm run build",
+    "check:package": "node scripts/check-package.mjs"
+  },
+  "peerDependencies": {
+    "expo": ">=58",
+    "expo-modules-core": ">=58",
+    "react": ">=19.3",
+    "react-native": ">=0.88"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "tsx": "4.20.6",
+    "@types/node": "24.10.0"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "react-native": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./core": {
+      "types": "./dist/core.d.ts",
+      "react-native": "./dist/core.js",
+      "default": "./dist/core.js"
+    }
+  },
+  "type": "module"
+}

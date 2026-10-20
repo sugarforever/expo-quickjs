@@ -1,0 +1,9 @@
+node_modules/
+build*/
+.venv/
+dist/
+*.tgz
+.DS_Store
+example/ios/
+example/android/
+.expo/
