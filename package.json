@@ -1,6 +1,6 @@
 {
   "name": "expo-quickjs",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Bounded native QuickJS workers for Expo, alongside Hermes",
   "license": "MIT",
   "main": "dist/index.js",

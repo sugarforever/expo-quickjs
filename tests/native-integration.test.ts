@@ -1,7 +1,55 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { createQuickJS } from "../src/core.ts";
+import { createQuickJS, type JsonValue } from "../src/core.ts";
 import { HostNativeTransport } from "./native-transport.ts";
+test("output streams before completion in order without exposing the final output to mutation", async () => {
+  const q = createQuickJS(new HostNativeTransport());
+  const streamed: JsonValue[] = [];
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => { release = resolve; });
+  try {
+    const result = await q.execute(
+      'text({step:1}); await tools.wait(); text(); text("你好🌳"); return 7',
+      {
+        runId: "stream",
+        onOutput: (value) => {
+          streamed.push(structuredClone(value));
+          if (value && typeof value === "object" && !Array.isArray(value)) {
+            value.step = 99;
+            release();
+          }
+        },
+        tools: { wait: async () => { await gate; return null; } },
+        limits: { timeoutMs: 1000 },
+      },
+    );
+    assert.deepEqual(streamed, [{step:1}, null, "你好🌳"]);
+    assert.deepEqual(result, {ok:true, value:7, output:[{step:1}, null, "你好🌳"]});
+  } finally {
+    await q.close();
+  }
+});
+
+test("a throwing output callback fails the execution and stops its worker", async () => {
+  const q = createQuickJS(new HostNativeTransport());
+  let calls = 0;
+  try {
+    const result = await q.execute('text("first"); while(true){}', {
+      runId: "callback-error",
+      onOutput: () => { calls++; throw Error("Output sink failed"); },
+      limits: { timeoutMs: 1000 },
+    });
+    assert.equal(calls, 1);
+    assert.deepEqual(result, {
+      ok:false, status:"native-error", error:"Error: Output sink failed", output:["first"],
+    });
+    assert.deepEqual(await q.execute('return 42', {runId:"after-callback-error"}), {
+      ok:true, value:42, output:[],
+    });
+  } finally {
+    await q.close();
+  }
+});
 test("real native engine executes facade prelude and concurrent out-of-order host calls", async () => {
   const q = createQuickJS(new HostNativeTransport());
   try {

@@ -66,6 +66,10 @@ export type Tool = (
 export interface ExecuteOptions {
   runId: string;
   tools?: Record<string, Tool>;
+  /** Synchronously observe each text() value in order. Return values are ignored.
+   * Values are separate copies from result.output. Throwing stops the run with native-error.
+   */
+  onOutput?: (value: JsonValue) => void;
   signal?: AbortSignal;
   limits?: Partial<Limits>;
 }
@@ -357,6 +361,10 @@ export function createQuickJS(transport: NativeTransport) {
         const m = JSON.parse(e.json);
         if (m.type === "output") {
           output.push(m.value ?? null);
+          // Keep the collected result independent of mutations by the observer.
+          const run = runs.get(options.runId);
+          if (run && !run.controller.signal.aborted && options.onOutput)
+            options.onOutput(JSON.parse(e.json).value ?? null);
           return;
         }
         if (

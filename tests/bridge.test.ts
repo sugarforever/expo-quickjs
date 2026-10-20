@@ -33,6 +33,54 @@ class Transport implements NativeTransport {
     this.listener?.(e);
   }
 }
+test("streaming output stops after cancellation and ignores late native messages", async () => {
+  const t = new Transport(), q = createQuickJS(t);
+  const values: unknown[] = [];
+  try {
+    const result = q.execute("", {
+      runId: "stream-cancel", onOutput: (value) => { values.push(value); },
+    });
+    await new Promise((r) => setImmediate(r));
+    t.send({runId:"stream-cancel", type:"message", json:'{"type":"output","value":1}'});
+    await q.cancel("stream-cancel");
+    t.send({runId:"stream-cancel", type:"message", json:'{"type":"output","value":2}'});
+    assert.deepEqual(values, [1]);
+    assert.deepEqual(await result, {
+      ok:false, status:"aborted", error:"aborted", output:[1],
+    });
+  } finally {
+    await q.close();
+  }
+});
+test("streaming callbacks stop as soon as cancellation begins, before native shutdown joins", async () => {
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => { release = resolve; });
+  class DelayedStop extends Transport {
+    override async stop(id: string) {
+      await gate;
+      await super.stop(id);
+    }
+  }
+  const t = new DelayedStop();
+  const runtime = createQuickJS(t);
+  const values: unknown[] = [];
+  try {
+    const result = runtime.execute("", {
+      runId: "cancel-pending", onOutput: (value) => { values.push(value); },
+    });
+    await new Promise((r) => setImmediate(r));
+    t.send({runId:"cancel-pending", type:"message", json:'{"type":"output","value":1}'});
+    const cancelled = runtime.cancel("cancel-pending");
+    t.send({runId:"cancel-pending", type:"message", json:'{"type":"output","value":2}'});
+    release();
+    await cancelled;
+    assert.deepEqual(values, [1]);
+    assert.deepEqual((await result).output, [1, 2]);
+  } finally {
+    release();
+    await runtime.close();
+  }
+});
 test("calculations and tools cross only bounded serialized transport", async () => {
   const t = new Transport(),
     q = createQuickJS(t);

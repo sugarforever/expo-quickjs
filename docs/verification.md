@@ -38,3 +38,7 @@ Native QuickJS runtimes isolate JS globals and expose only explicit JSON capabil
 ## Release preparation
 
 The user approved releasing 0.1.0 for subsequent Moose integration validation. The first GitHub run passed native tests and Linux ASan/UBSan, but exposed an EPIPE race in the subprocess test transport during cleanup. A terminal-event/closed-stdin regression reproduced the unnecessary write; cleanup now waits for stream closure without writing after terminal. The local facade/native-integration suite now passes 18/18 tests. This changes the host test harness, not the mobile runtime. Release CI reruns the full matrix before npm publication; Android remains unverified.
+
+## 0.2.0 live output (October 20, 2026)
+
+Added optional synchronous `onOutput` observation in the TypeScript facade without changing the native engine or channel. New tests first failed because callbacks were not invoked, then passed after implementation. The full suite passes 24/24 tests, including real native streaming before a gated host call completes, ordered Unicode/null values, independent callback JSON copies, callback exceptions and cancellation with late events. TypeScript build, host native CTest, extracted-package CTest and available Expo autolinking checks passed. New mobile simulator/device runs and Moose validation were not performed for this change. Release CI repeats macOS/Linux and Linux ASan/UBSan checks before publication.

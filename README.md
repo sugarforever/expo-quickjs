@@ -2,7 +2,7 @@
 
 MIT native QuickJS workers for Expo iOS and Android, alongside Hermes. Each run gets a fresh QuickJS runtime/context on a dedicated native thread. The generic package has no Pi dependency and grants no filesystem, network, module-loader, Node or device APIs.
 
-Version 0.1.0 is an initial release for application validation. Android native builds and device behavior remain unverified; see the verification record. Use an Expo development/native build; Expo Go cannot load it. Initial target: Expo 58, React Native 0.88, iOS 16.4+ / Android API 24+. See [verification](docs/verification.md) for what was actually exercised.
+Version 0.2.0 adds live output callbacks for application integration and validation. Android native builds and device behavior remain unverified; see the verification record. Use an Expo development/native build; Expo Go cannot load it. Initial target: Expo 58, React Native 0.88, iOS 16.4+ / Android API 24+. See [verification](docs/verification.md) for what was actually exercised.
 
 ```ts
 import { createQuickJS } from 'expo-quickjs';
@@ -16,6 +16,7 @@ const result = await quickjs.execute(`
 `, {
   runId: 'lookup-1', // unique for the lifetime of the native module
   signal: controller.signal,
+  onOutput: (value) => console.log('Live script output:', value),
   tools: {
     lookup: async (args, { signal }) => {
       // Explicit app capability. Implement authentication/authorization here.
@@ -30,6 +31,8 @@ await quickjs.close(); // terminal; joins workers, removes listeners
 ```
 
 `execute` takes an async function body. `tools` is an immutable object of explicitly granted async JSON handlers. `text(value)` appends JSON output. Undefined values/results normalize to null. JSON.stringify semantics apply (cycles and BigInt fail; undefined properties are omitted; nonfinite numbers become null). The returned union distinguishes script, timeout, aborted, resource-limit and native-transport errors. Host handler errors reject the corresponding script promise; scripts may catch them. Admission/configuration errors reject the API promise.
+
+`onOutput(value)` observes each `text(...)` value in arrival order before execution completes. It receives a separate JSON copy, so mutations do not change `result.output`. Collected output is still returned on success, error, or cancellation; callbacks stop when cancellation begins or execution completes. Keep the callback synchronous and brief: its return value is ignored, and a synchronous throw stops the run with `native-error` while preserving output already collected. Schedule asynchronous UI work yourself and handle its errors.
 
 Top-level `execute`, `cancel`, `close` use one shared facade. Prefer one facade per native module; native close affects every facade. Two active runs total, including advanced channel runs. Script/tool output must be treated as untrusted app data.
 
@@ -77,6 +80,6 @@ From repository root, run `npm pack`, then `cd example && npm install --legacy-p
 
 The [release workflow](.github/workflows/release.yml) publishes when a GitHub release is published, or when manually dispatched with an existing tag. It verifies macOS/Linux/native/sanitizer tests, requires the tag to match package.json, and publishes the tested tarball with provenance. Tags must point to commits on main.
 
-For the first publication, add an npm granular publish token as repository Actions secret `NPM_TOKEN` (never commit it). The token must permit publishing this package and satisfy the account's 2FA policy. After the package exists, prefer npm trusted publishing: owner `sugarforever`, repository `expo-quickjs`, workflow `release.yml`, with direct npm publish allowed. Once configured, remove `NPM_TOKEN`; the workflow's OIDC permission supports token-free publication. See [npm trusted publishing](https://docs.npmjs.com/trusted-publishers/).
+npm trusted publishing is configured for owner `sugarforever`, repository `expo-quickjs`, workflow `release.yml`, with direct npm publish allowed. GitHub Actions uses OIDC without a stored npm token. See the [release guide](docs/releasing.md) and [npm trusted publishing](https://docs.npmjs.com/trusted-publishers/).
 
 Release a version by updating package.json and lockfile, merging to main, and publishing a GitHub release tagged `v<version>`. A failed authentication attempt can be retried using the workflow's manual tag input after credentials are configured.
