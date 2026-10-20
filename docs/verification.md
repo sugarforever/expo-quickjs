@@ -34,3 +34,7 @@ Native QuickJS runtimes isolate JS globals and expose only explicit JSON capabil
 - Final source facade/real-engine integration suite: 17/17 passed. Native CTest passed against repository source and extracted npm artifact; UBSan CTest passed after lifecycle fixes.
 - Final core tarball: `expo-quickjs-0.1.0.tgz`; SHA-256 `893dccb91465752a45c70b45cc4e21fa16b41648143a7f4183bd34c10940651c`. No publication or remote repository created.
 - Fresh review identified retained completed executions and concurrent-close barriers; fixes were reproduced with failing tests before implementation and are now covered natively and in the facade.
+
+## Release preparation
+
+The user approved releasing 0.1.0 for subsequent Moose integration validation. The first GitHub run passed native tests and Linux ASan/UBSan, but exposed an EPIPE race in the subprocess test transport during cleanup. A terminal-event/closed-stdin regression reproduced the unnecessary write; cleanup now waits for stream closure without writing after terminal. The local facade/native-integration suite now passes 18/18 tests. This changes the host test harness, not the mobile runtime. Release CI reruns the full matrix before npm publication; Android remains unverified.

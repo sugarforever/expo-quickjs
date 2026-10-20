@@ -1,13 +1,27 @@
 name: verify
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  workflow_call:
+    inputs:
+      ref:
+        description: Git ref to verify for a release
+        required: false
+        type: string
+        default: ""
+permissions:
+  contents: read
 jobs:
   core:
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -20,5 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
       - run: cmake -S . -B build-asan -DQUICKJS_SANITIZE=ON && cmake --build build-asan -j 4
       - run: ctest --test-dir build-asan --output-on-failure

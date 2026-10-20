@@ -1,0 +1,62 @@
+name: Release to npm
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag matching package.json (for example v0.1.0)
+        required: true
+        type: string
+        default: v0.1.0
+
+permissions:
+  contents: read
+
+concurrency:
+  group: npm-release-${{ github.event.release.tag_name || inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    uses: ./.github/workflows/verify.yml
+    with:
+      ref: ${{ github.event.release.tag_name || inputs.tag }}
+
+  publish:
+    if: github.repository == 'sugarforever/expo-quickjs'
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name || inputs.tag }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          cache: npm
+      - name: Validate release tag and source
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: |
+          node --input-type=module -e 'import fs from "node:fs"; const p=JSON.parse(fs.readFileSync("package.json")); if(process.env.RELEASE_TAG !== `v${p.version}`) throw Error("Release tag must equal v + package.json version"); if(p.name !== "expo-quickjs") throw Error("Unexpected package name");'
+          git merge-base --is-ancestor HEAD origin/main
+      - run: npm ci --legacy-peer-deps
+      - name: Build and check exact package artifact
+        run: |
+          cmake -S . -B build
+          cmake --build build -j 4
+          npm pack --json > build/pack.json
+          npm run check:package
+      - name: Publish verified artifact to npmjs
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          TARBALL=$(node -p 'JSON.parse(require("fs").readFileSync("build/pack.json"))[0].filename')
+          npm publish "$TARBALL" --access public --provenance

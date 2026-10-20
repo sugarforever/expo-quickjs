@@ -60,5 +60,9 @@
   "homepage": "https://github.com/sugarforever/expo-quickjs#readme",
   "bugs": {
     "url": "https://github.com/sugarforever/expo-quickjs/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   }
 }

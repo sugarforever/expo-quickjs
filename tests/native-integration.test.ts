@@ -138,3 +138,36 @@ test("omitted JSON values normalize to null at the public boundary", async () =>
     await q.close();
   }
 });
+
+test("cleanup joins a terminal subprocess without writing to its closed stdin", async () => {
+  const transport = new HostNativeTransport();
+  let lateWrites = 0;
+  const completed = new Promise<void>((resolve, reject) => {
+    transport.addListener("onEvent", (event) => {
+      if (event.type !== "terminal") return;
+      const child = transport.children.get("closed-pipe");
+      assert.ok(child);
+      child.stdin.destroy();
+      child.stdin.write = (() => {
+        lateWrites++;
+        return false;
+      }) as typeof child.stdin.write;
+      void transport.close().then(resolve, reject);
+    });
+  });
+  await transport.start(
+    "closed-pipe",
+    "__finish('null')",
+    "null",
+    JSON.stringify({
+      timeoutMs: 1000,
+      memoryBytes: 33554432,
+      stackBytes: 262144,
+      outputBytes: 1048576,
+      messageBytes: 1048576,
+      maxHostCalls: 32,
+    }),
+  );
+  await completed;
+  assert.equal(lateWrites, 0);
+});

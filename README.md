@@ -2,7 +2,7 @@
 
 MIT native QuickJS workers for Expo iOS and Android, alongside Hermes. Each run gets a fresh QuickJS runtime/context on a dedicated native thread. The generic package has no Pi dependency and grants no filesystem, network, module-loader, Node or device APIs.
 
-This is a prerelease implementation, not yet published to npm. Android builds and the cross-platform CI matrix must be verified before release. Use an Expo development/native build; Expo Go cannot load it. Initial target: Expo 58, React Native 0.88, iOS 16.4+ / Android API 24+. See [verification](docs/verification.md) for what was actually exercised.
+Version 0.1.0 is an initial release for application validation. Android native builds and device behavior remain unverified; see the verification record. Use an Expo development/native build; Expo Go cannot load it. Initial target: Expo 58, React Native 0.88, iOS 16.4+ / Android API 24+. See [verification](docs/verification.md) for what was actually exercised.
 
 ```ts
 import { createQuickJS } from 'expo-quickjs';
@@ -72,3 +72,11 @@ npm pack
 ## Packed Expo example
 
 From repository root, run `npm pack`, then `cd example && npm install --legacy-peer-deps`. The example consumes the tarball, not sibling source. `npx expo run:ios` / `npx expo run:android` generates/builds native projects. Hermes remains enabled in app.json. An automatic native self-test runs at mount. Controls cover calculation, delayed controlled host tool, CPU/microtask loops, output limits and cancellation. The 100ms UI tick counter lets you check responsiveness. Reload while a run is active to exercise module teardown. No model credentials or paid requests are needed.
+
+## npm releases
+
+The [release workflow](.github/workflows/release.yml) publishes when a GitHub release is published, or when manually dispatched with an existing tag. It verifies macOS/Linux/native/sanitizer tests, requires the tag to match package.json, and publishes the tested tarball with provenance. Tags must point to commits on main.
+
+For the first publication, add an npm granular publish token as repository Actions secret `NPM_TOKEN` (never commit it). The token must permit publishing this package and satisfy the account's 2FA policy. After the package exists, prefer npm trusted publishing: owner `sugarforever`, repository `expo-quickjs`, workflow `release.yml`, with direct npm publish allowed. Once configured, remove `NPM_TOKEN`; the workflow's OIDC permission supports token-free publication. See [npm trusted publishing](https://docs.npmjs.com/trusted-publishers/).
+
+Release a version by updating package.json and lockfile, merging to main, and publishing a GitHub release tagged `v<version>`. A failed authentication attempt can be retried using the workflow's manual tag input after credentials are configured.
