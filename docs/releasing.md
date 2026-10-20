@@ -27,7 +27,7 @@ Publish the prepared GitHub draft release after the npm first publish. The workf
 
 The first publication may briefly show a `0.0.0-stage` placeholder while npm processes it. Wait until the exact version is available from the registry before declaring the release complete.
 
-The trusted publisher was configured on October 20, 2026. npm currently marks it **Pending validation** and requires an actual workflow publication before **October 22, 2026 at 16:00 UTC**. Skipping the already-published 0.1.0 does not validate OIDC. Before the next release, check the connection in npm package Settings; if it expired, recreate it using the values above immediately before publishing. The first subsequent version will verify the complete OIDC publication path.
+The trusted publisher was configured and validated on October 20, 2026 by the automatic 0.2.0 publication from GitHub Actions. npm package Settings now shows **Status: Valid**. No initial-validation deadline remains. Future releases use this existing connection; check Settings if a workflow reports an OIDC authentication failure.
 
 ## Later versions
 
