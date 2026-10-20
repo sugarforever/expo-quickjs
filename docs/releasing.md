@@ -25,6 +25,10 @@ See https://docs.npmjs.com/trusted-publishers/. The workflow already grants `id-
 
 Publish the prepared GitHub draft release after the npm first publish. The workflow recognizes an existing package version and skips its npm upload, so the manually bootstrapped release is safe to finalize.
 
+The first publication may briefly show a `0.0.0-stage` placeholder while npm processes it. Wait until the exact version is available from the registry before declaring the release complete.
+
+The trusted publisher was configured on October 20, 2026. npm currently marks it **Pending validation** and requires an actual workflow publication before **October 22, 2026 at 16:00 UTC**. Skipping the already-published 0.1.0 does not validate OIDC. Before the next release, check the connection in npm package Settings; if it expired, recreate it using the values above immediately before publishing. The first subsequent version will verify the complete OIDC publication path.
+
 ## Later versions
 
 1. Start from a clean, updated `main`. Bump root package.json and package-lock.json without creating the Git tag yet:
