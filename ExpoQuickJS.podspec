@@ -7,9 +7,9 @@ Pod::Spec.new do |s|
   s.description = package['description']
   s.license = { :type => 'MIT', :file => 'LICENSE' }
   s.author = 'expo-quickjs contributors'
-  s.homepage = 'https://www.npmjs.com/package/expo-quickjs'
-  # Local development pod; no remote is fetched by consumers using node_modules.
-  s.source = { :http => 'https://registry.npmjs.org/expo-quickjs/-/expo-quickjs-' + s.version.to_s + '.tgz' }
+  s.homepage = package['homepage']
+  # Expo consumes this pod from node_modules; CocoaPods does not fetch this Git source.
+  s.source = { :git => 'https://github.com/sugarforever/expo-quickjs.git', :tag => 'v' + s.version.to_s }
   s.platform = :ios, '16.4'
   s.swift_version = '5.9'
   s.static_framework = true

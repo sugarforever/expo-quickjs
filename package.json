@@ -52,5 +52,13 @@
       "default": "./dist/core.js"
     }
   },
-  "type": "module"
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sugarforever/expo-quickjs.git"
+  },
+  "homepage": "https://github.com/sugarforever/expo-quickjs#readme",
+  "bugs": {
+    "url": "https://github.com/sugarforever/expo-quickjs/issues"
+  }
 }

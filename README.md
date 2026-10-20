@@ -2,7 +2,7 @@
 
 MIT native QuickJS workers for Expo iOS and Android, alongside Hermes. Each run gets a fresh QuickJS runtime/context on a dedicated native thread. The generic package has no Pi dependency and grants no filesystem, network, module-loader, Node or device APIs.
 
-This is a local, unpublished implementation. Use an Expo development/native build; Expo Go cannot load it. Initial target: Expo 58, React Native 0.88, iOS 16.4+ / Android API 24+. See [verification](docs/verification.md) for what was actually exercised.
+This is a prerelease implementation, not yet published to npm. Android builds and the cross-platform CI matrix must be verified before release. Use an Expo development/native build; Expo Go cannot load it. Initial target: Expo 58, React Native 0.88, iOS 16.4+ / Android API 24+. See [verification](docs/verification.md) for what was actually exercised.
 
 ```ts
 import { createQuickJS } from 'expo-quickjs';
